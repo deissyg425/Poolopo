@@ -1,0 +1,28 @@
+name: Forever Magento Hunter
+on:
+  schedule:
+    - cron: '0 0 * * *' # Every night at midnight
+  workflow_dispatch:      # Manual Start button
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Requests
+        run: pip install requests
+      - name: Run Hunt
+        run: python magento_hunt.py
+      - name: Save Progress to GitHub
+        run: |
+          git config --global user.name 'Magento-Bot'
+          git config --global user.email 'bot@noreply.github.com'
+          git add found_magento_sites.txt scanned_history.txt last_date_checked.txt
+          git commit --allow-empty -m "Daily Hunt Update"
+          git push
