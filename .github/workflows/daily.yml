@@ -1,7 +1,7 @@
 name: Forever Magento Hunter
 on:
   schedule:
-    - cron: '0 0 * * *' # Every night at midnight
+    - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch:      # Manual Start button
 
 jobs:
@@ -19,10 +19,10 @@ jobs:
         run: pip install requests
       - name: Run Hunt
         run: python magento_hunt.py
-      - name: Save Progress to GitHub
+      - name: Save Progress
         run: |
           git config --global user.name 'Magento-Bot'
           git config --global user.email 'bot@noreply.github.com'
           git add found_magento_sites.txt scanned_history.txt last_date_checked.txt
-          git commit --allow-empty -m "Daily Hunt Update"
+          git commit -m "Auto-update: 15k Batch Complete" || echo "No changes"
           git push
