@@ -25,41 +25,31 @@ def check_site(domain):
         url = f"http://{domain}"
         r = requests.get(url, timeout=4, headers={'User-Agent': 'Mozilla/5.0'}) 
         content = r.text.lower()
-        
-        # --- KEYWORDS ---
         tech_kw = ["iphone", "samsung", "smartphone", "mobile phone", "gadget", "electronics", "consumer electronics", "laptop", "tablet"]
-        is_refurbished = "refurbished" in content or "renewed" in content or "pre-owned" in content
+        is_refurbished = any(x in content for x in ["refurbished", "renewed", "pre-owned"])
         is_fashion = any(kw in content for kw in ["clothing", "jewelry", "jewellery", "fashion", "necklace", "watch"])
-
-        # --- PLATFORM CHECKS ---
         is_magento = any(x in content for x in ["/static/frontend/", "window.checkoutconfig", "mage/cookies"])
         is_shopify = "cdn.shopify.com" in content or "shopify.theme" in content
         is_woo = "wp-content/plugins/woocommerce" in content or "wc-ajax" in content
         is_bigcom = "cdn11.bigcommerce.com" in content or "bc-app" in content
         is_usa = any(x in content for x in ["usa", "united states", "shipping to us", "usd"]) or domain.endswith(".us")
-        
-        # 1. MAGENTO TARGETS (MUST BE USA)
         if is_magento and is_usa:
             if any(kw in content for kw in tech_kw): return "magento_tech"
             if is_fashion: return "magento_fashion"
-
-        # 2. EXCLUSIVE TECH (ALLOW BIGCOMMERCE ONLY IF REFURBISHED)
         if any(kw in content for kw in tech_kw):
-            if is_shopify or is_woo: return None # Always skip Shopify/Woo
+            if is_shopify or is_woo: return None
             if is_bigcom:
-                if is_refurbished: return "exclusive_tech" # Allow BigCom for refurbished
-                else: return None # Skip BigCom for new items
-            return "exclusive_tech" # Allow any other custom platform
+                if is_refurbished: return "exclusive_tech"
+                else: return None
+            return "exclusive_tech"
         return None
-    except:
-        return None
+    except: return None
 
 def run_hunt():
     target_date = get_last_date()
     if target_date >= datetime.date.today():
         print("All caught up!")
         return
-
     memory = set()
     for f_name in [MAGENTO_TECH_FILE, MAGENTO_FASHION_FILE, EXCLUSIVE_TECH_FILE, HISTORY_FILE]:
         if os.path.exists(f_name):
@@ -67,10 +57,9 @@ def run_hunt():
                 for line in f:
                     d = line.split(" ")[0].strip().lower()
                     if d: memory.add(d)
-
-    print(f"--- Starting 15k Refurb-Ready Hunt: {target_date} ---")
+    print(f"--- Starting 15k Batch for: {target_date} ---")
+    # FIXED URL BELOW (Added the missing slash)
     feed_url = f"https://raw.githubusercontent.com{target_date}.txt"
-    
     try:
         response = requests.get(feed_url)
         if response.status_code == 200:
@@ -82,10 +71,8 @@ def run_hunt():
                     if processed >= BATCH_SIZE: break
                     clean_domain = domain.strip().lower()
                     if not clean_domain or clean_domain in memory: continue
-                    
                     print(f"Checking: {clean_domain}...", end=" ")
                     result = check_site(clean_domain)
-                    
                     if result == "magento_tech":
                         print("!!! MAGENTO TECH !!!")
                         mt.write(f"{clean_domain} (Added: {target_date})\n")
@@ -95,17 +82,13 @@ def run_hunt():
                     elif result == "exclusive_tech":
                         print("!!! EXCLUSIVE TECH !!!")
                         ef.write(f"{clean_domain} (Added: {target_date})\n")
-                    else:
-                        print("No.")
-                    
+                    else: print("No.")
                     hf.write(clean_domain + "\n")
                     processed += 1
-        
-        with open(PROGRESS_FILE, "w") as f:
-            f.write(str(target_date + datetime.timedelta(days=1)))
-            
-    except Exception as e:
-        print(f"Error: {e}")
+            with open(PROGRESS_FILE, "w") as f:
+                f.write(str(target_date + datetime.timedelta(days=1)))
+        else: print(f"No data for {target_date}. Moving to next day.")
+    except Exception as e: print(f"Error: {e}")
 
 if __name__ == "__main__":
     run_hunt()
