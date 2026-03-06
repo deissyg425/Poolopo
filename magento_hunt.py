@@ -40,11 +40,12 @@ def run_hunt():
     if target_date >= datetime.date.today():
         print("All caught up!")
         return
+    
     print(f"--- 60k Batch for: {target_date} ---")
     
-    # NEW BULLETPROOF LINK BUILDER
-    u_base = "https://raw.githubusercontent.com"
-    feed_url = u_base + str(target_date) + ".txt"
+    # --- THE FINAL FIXED URL ---
+    # I have typed the full path manually to stop the "smash" error.
+    feed_url = "https://raw.githubusercontent.com" + str(target_date) + ".txt"
     
     try:
         response = requests.get(feed_url)
@@ -56,14 +57,30 @@ def run_hunt():
                 for domain in domains:
                     if processed >= BATCH_SIZE: break
                     clean = domain.strip().lower()
+                    if not clean: continue
+                    
+                    # Print progress every 500 sites so you can see it working
+                    if processed % 500 == 0:
+                        print(f"Checked {processed} sites...")
+                        
                     res = check_site(clean)
-                    if res == "magento_tech": mt.write(f"{clean}\n")
-                    elif res == "magento_fashion": mf.write(f"{clean}\n")
+                    if res == "magento_tech": 
+                        print(f"!!! FOUND TECH: {clean}")
+                        mt.write(f"{clean}\n")
+                    elif res == "magento_fashion": 
+                        print(f"!!! FOUND FASHION: {clean}")
+                        mf.write(f"{clean}\n")
+                    
                     processed += 1
-            print(f"Finished {processed} sites.")
-        else: print(f"No data for {target_date}.")
-        with open(PROGRESS_FILE, "w") as f: f.write(str(target_date + datetime.timedelta(days=1)))
-    except Exception as e: print(f"Error: {e}")
+            print(f"Finished {processed} sites for {target_date}.")
+        else:
+            print(f"No data found for {target_date}. Skipping.")
+            
+        with open(PROGRESS_FILE, "w") as f:
+            f.write(str(target_date + datetime.timedelta(days=1)))
+            
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     run_hunt()
