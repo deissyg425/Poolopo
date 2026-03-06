@@ -57,9 +57,10 @@ def run_hunt():
                 for line in f:
                     d = line.split(" ").strip().lower()
                     if d: memory.add(d)
+    
     print(f"--- Starting 15k Batch for: {target_date} ---")
     
-    # --- THIS IS THE CRITICAL LINE ---
+    # --- THIS IS THE FIXED LINE ---
     feed_url = f"https://raw.githubusercontent.com{target_date}.txt"
     
     try:
@@ -89,7 +90,10 @@ def run_hunt():
                     processed += 1
             with open(PROGRESS_FILE, "w") as f:
                 f.write(str(target_date + datetime.timedelta(days=1)))
-        else: print(f"No data for {target_date}. Moving to next day.")
+        else:
+            print(f"No data for {target_date}. Skipping to next day.")
+            with open(PROGRESS_FILE, "w") as f:
+                f.write(str(target_date + datetime.timedelta(days=1)))
     except Exception as e: print(f"Error: {e}")
 
 if __name__ == "__main__":
