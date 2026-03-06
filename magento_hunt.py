@@ -25,22 +25,21 @@ def check_site(domain):
         url = f"http://{domain}"
         r = requests.get(url, timeout=4, headers={'User-Agent': 'Mozilla/5.0'}) 
         content = r.text.lower()
-        tech_kw = ["iphone", "samsung", "smartphone", "mobile phone", "gadget", "electronics", "consumer electronics", "laptop", "tablet"]
+        tech_kw = ["iphone", "samsung", "smartphone", "mobile phone", "gadget", "electronics", "laptop"]
         is_refurbished = any(x in content for x in ["refurbished", "renewed", "pre-owned"])
-        is_fashion = any(kw in content for kw in ["clothing", "jewelry", "jewellery", "fashion", "necklace", "watch"])
+        is_fashion = any(kw in content for kw in ["clothing", "jewelry", "fashion", "necklace"])
         is_magento = any(x in content for x in ["/static/frontend/", "window.checkoutconfig", "mage/cookies"])
-        is_shopify = "cdn.shopify.com" in content or "shopify.theme" in content
-        is_woo = "wp-content/plugins/woocommerce" in content or "wc-ajax" in content
-        is_bigcom = "cdn11.bigcommerce.com" in content or "bc-app" in content
-        is_usa = any(x in content for x in ["usa", "united states", "shipping to us", "usd"]) or domain.endswith(".us")
+        is_shopify = "cdn.shopify.com" in content
+        is_woo = "woocommerce" in content
+        is_bigcom = "bigcommerce" in content
+        is_usa = any(x in content for x in ["usa", "united states", "shipping to us"]) or domain.endswith(".us")
         if is_magento and is_usa:
             if any(kw in content for kw in tech_kw): return "magento_tech"
             if is_fashion: return "magento_fashion"
         if any(kw in content for kw in tech_kw):
             if is_shopify or is_woo: return None
             if is_bigcom:
-                if is_refurbished: return "exclusive_tech"
-                else: return None
+                return "exclusive_tech" if is_refurbished else None
             return "exclusive_tech"
         return None
     except: return None
@@ -60,8 +59,9 @@ def run_hunt():
     
     print(f"--- Starting 15k Batch for: {target_date} ---")
     
-    # --- THIS IS THE FIXED LINE ---
-    feed_url = f"https://raw.githubusercontent.com{target_date}.txt"
+    # THE FIXED LINK
+    base = "https://raw.githubusercontent.com"
+    feed_url = f"{base}{target_date}.txt"
     
     try:
         response = requests.get(feed_url)
@@ -91,7 +91,7 @@ def run_hunt():
             with open(PROGRESS_FILE, "w") as f:
                 f.write(str(target_date + datetime.timedelta(days=1)))
         else:
-            print(f"No data for {target_date}. Skipping to next day.")
+            print(f"No data for {target_date}. Skipping.")
             with open(PROGRESS_FILE, "w") as f:
                 f.write(str(target_date + datetime.timedelta(days=1)))
     except Exception as e: print(f"Error: {e}")
