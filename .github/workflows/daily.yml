@@ -1,28 +1,35 @@
 name: Forever Magento Hunter
 on:
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
-  workflow_dispatch:      # Manual Start button
+    - cron: '0 */6 * * *' # Every 6 hours (12am, 6am, 12pm, 6pm)
+  workflow_dispatch:      # Allows you to press the manual "Run" button
 
 jobs:
   hunt:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write     # REQUIRED so the robot can save found sites
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Install Requests
+
+      - name: Install Tools
         run: pip install requests
-      - name: Run Hunt
+
+      - name: Run The Hunter
         run: python magento_hunt.py
-      - name: Save Progress
+
+      - name: Save Results to GitHub
         run: |
           git config --global user.name 'Magento-Bot'
           git config --global user.email 'bot@noreply.github.com'
-          git add found_magento_sites.txt scanned_history.txt last_date_checked.txt
-          git commit -m "Auto-update: 15k Batch Complete" || echo "No changes"
+          # This command adds ALL updated files to the save list
+          git add found_magento_tech.txt found_magento_fashion.txt found_exclusive_electronics.txt scanned_history.txt last_date_checked.txt
+          # This saves the files with a timestamp
+          git commit -m "Auto-update: $(date +'%Y-%m-%d %H:%M')" || echo "No new sites found"
           git push
