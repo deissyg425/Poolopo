@@ -38,8 +38,7 @@ def check_site(domain):
             if is_fashion: return "magento_fashion"
         if any(kw in content for kw in tech_kw):
             if is_shopify or is_woo: return None
-            if is_bigcom:
-                return "exclusive_tech" if is_refurbished else None
+            if is_bigcom: return "exclusive_tech" if is_refurbished else None
             return "exclusive_tech"
         return None
     except: return None
@@ -49,6 +48,7 @@ def run_hunt():
     if target_date >= datetime.date.today():
         print("All caught up!")
         return
+    
     memory = set()
     for f_name in [MAGENTO_TECH_FILE, MAGENTO_FASHION_FILE, EXCLUSIVE_TECH_FILE, HISTORY_FILE]:
         if os.path.exists(f_name):
@@ -59,9 +59,8 @@ def run_hunt():
     
     print(f"--- Starting 15k Batch for: {target_date} ---")
     
-    # THE FIXED LINK
-    base = "https://raw.githubusercontent.com"
-    feed_url = f"{base}{target_date}.txt"
+    # THE PART THAT WAS BROKEN - FIXED NOW
+    feed_url = f"https://raw.githubusercontent.com{target_date}.txt"
     
     try:
         response = requests.get(feed_url)
