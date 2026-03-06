@@ -1,14 +1,14 @@
 name: Forever Magento Hunter
 on:
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours (12am, 6am, 12pm, 6pm)
+    - cron: '0 * * * *'  # This wakes the robot up EVERY HOUR (24 times a day)
   workflow_dispatch:      # Allows you to press the manual "Run" button
 
 jobs:
   hunt:
     runs-on: ubuntu-latest
     permissions:
-      contents: write     # REQUIRED so the robot can save found sites
+      contents: write     # Required so the robot can save found sites
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -28,8 +28,7 @@ jobs:
         run: |
           git config --global user.name 'Magento-Bot'
           git config --global user.email 'bot@noreply.github.com'
-          # This command adds ALL updated files to the save list
+          # This saves all 5 files so you never lose progress or leads
           git add found_magento_tech.txt found_magento_fashion.txt found_exclusive_electronics.txt scanned_history.txt last_date_checked.txt
-          # This saves the files with a timestamp
-          git commit -m "Auto-update: $(date +'%Y-%m-%d %H:%M')" || echo "No new sites found"
+          git commit -m "Hourly Update: 60k Scan Complete" || echo "No changes"
           git push
