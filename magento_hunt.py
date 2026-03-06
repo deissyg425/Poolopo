@@ -59,7 +59,7 @@ def run_hunt():
                     if d: memory.add(d)
     print(f"--- Starting 15k Batch for: {target_date} ---")
     # FIXED URL BELOW (Added the missing slash)
-    feed_url = f"https://raw.githubusercontent.com{target_date}.txt"
+        feed_url = f"https://raw.githubusercontent.com{target_date}.txt"
     try:
         response = requests.get(feed_url)
         if response.status_code == 200:
